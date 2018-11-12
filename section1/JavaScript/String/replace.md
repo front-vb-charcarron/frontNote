@@ -9,6 +9,8 @@
 > ps:replace是创建一个新的字符串,而非覆盖原本的字符串。
 
 
+> replace可以传递函数作为替换字符的参数。
+
 ```
 	var str1 = 'This is a String eie String string';
 	var str7 = str1.replace('String','bluej');
