@@ -2957,7 +2957,82 @@
 <blockquote>
 <p>npm i</p>
 </blockquote>
-<p><a href="https://segmentfault.com/a/1190000011153487#articleHeader1" target="_blank">vue&#x89E3;&#x6790;</a></p>
+<h3 id="vue-&#x57FA;&#x4E8E;-&#x4F9D;&#x8D56;&#x6536;&#x96C6;-&#x7684;&#x54CD;&#x5E94;&#x5F0F;&#x539F;&#x7406;">vue &#x57FA;&#x4E8E; &#x201C;&#x4F9D;&#x8D56;&#x6536;&#x96C6;&#x201D; &#x7684;&#x54CD;&#x5E94;&#x5F0F;&#x539F;&#x7406;</h3>
+<pre><code>// vue &#x57FA;&#x4E8E; &#x201C;&#x4F9D;&#x8D56;&#x6536;&#x96C6;&#x201D; &#x7684;&#x54CD;&#x5E94;&#x5F0F;&#x539F;&#x7406;&#x3002;
+
+let Dep = { // &#x4F9D;&#x8D56;&#x6536;&#x96C6;&#x5668;
+    target: null  
+};
+
+const defineReactive = (obj, key, val) =&gt; {
+    let deps = [];
+    Object.defineProperty(obj, key, {
+        get() {
+            console.log(`${key}&#x88AB;&#x8BFB;&#x53D6;&#xFF01;`);
+            if (Dep.target &amp;&amp; deps.indexOf(Dep.target) === -1) { 
+                deps.push(Dep.target); // &#x5728;&#x8BFB;&#x53D6;bgg.weight&#x548C;bgg.height&#x65F6;&#x628A;&#x4F9D;&#x8D56;&#x4FDD;&#x5B58;&#x8D77;&#x6765;&#xFF0C;&#x4E5F;&#x5B8C;&#x6210;&#x4E86;&#x4F9D;&#x8D56;&#x5173;&#x8054;&#x3002;
+            }
+
+            return val;
+        },
+        set(newVal) { 
+            console.log(`${key}&#x88AB;&#x4FEE;&#x6539;&#xFF01;`);
+            val = newVal;
+            deps.forEach(dep =&gt; { // &#x53EA;&#x8981;bgg.age&#x88AB;&#x4FEE;&#x6539;&#x65F6;&#xFF0C;&#x5C31;&#x4F1A;&#x89E6;&#x53D1;&#x4F9D;&#x8D56;&#x51FD;&#x6570;
+                dep();
+            });
+        }
+    });
+};
+
+// &#x4F7F;&#x5BF9;&#x8C61;&#x7684;&#x5C5E;&#x6027;&#x53D8;&#x5F97;&#x53EF;&#x89C2;&#x6D4B;
+const observable = obj =&gt; {
+    Object.keys(obj).forEach(k =&gt; {
+        defineReactive(obj, k, obj[k]);
+    });
+
+    return obj;
+};
+
+const computed = (val) =&gt; {
+    console.log(val);
+}
+
+const watcher = (obj, key, cb) =&gt; {
+    const onDepUpdated = () =&gt; {
+        let val = cb(); // &#x5728;&#x8FD9;&#x91CC;&#x8C03;&#x7528;cb&#x65F6;&#x4F1A;&#x89E6;&#x53D1; bgg.age&#x5C5E;&#x6027;&#x7684;get()
+        computed(val);
+    };
+
+    Object.defineProperty(obj, key, {
+        get() {    
+            Dep.target = onDepUpdated;
+            let val = cb(); // &#x5728;&#x8FD9;&#x91CC;&#x8C03;&#x7528;cb&#x65F6;&#x4F1A;&#x89E6;&#x53D1; bgg.age&#x5C5E;&#x6027;&#x7684;get()
+            Dep.target = null;
+            return val;
+        },
+        set() {
+            console.log(&apos;&#x8BA1;&#x7B97;&#x5C5E;&#x6027;&#x6CA1;&#x6709;set&#x65B9;&#x6CD5;&apos;);
+        }
+    });
+};
+
+let bgg = observable({
+    name: &apos;bgg&apos;,
+    age: 18,
+});
+
+// &#x591A;&#x4E2A;&#x4F9D;&#x8D56;&#x89C2;&#x6D4B;bgg&#x3002;
+watcher(bgg, &apos;height&apos;, () =&gt; bgg.age &gt; 30 ? &apos;&#x8EAB;&#x9AD8;&#x7F29;&#x6C34;&#x4E86;&apos; : &apos;&#x8EAB;&#x9AD8;&#x957F;&#x9AD8;&#x4E86;&apos;);
+watcher(bgg, &apos;weight&apos;, () =&gt; bgg.age &gt; 30 ? &apos;&#x4F53;&#x578B;&#x53D8;&#x80A5;&#x4E86;&apos; : &apos;&#x4F53;&#x578B;&#x53D8;&#x7626;&#x4E86;&apos;);
+
+// &#x89E6;&#x53D1;&#x89C2;&#x6D4B;bgg&#x7684;&#x4F9D;&#x8D56;&#x7684;get&#x5C5E;&#x6027;&#xFF0C;&#x5F62;&#x6210;&#x4F9D;&#x8D56;&#x5173;&#x8054;&#x3002;
+console.log(&apos;&#x8EAB;&#x9AD8;&#x521D;&#x59CB;&#x503C;&#xFF1A;&apos; + bgg.height);
+console.log(&apos;&#x4F53;&#x91CD;&#x521D;&#x59CB;&#x503C;&#xFF1A;&apos; + bgg.weight);
+
+// &#x6539;&#x53D8;age&#x503C;&#xFF0C;&#x89E6;&#x53D1;&#x5173;&#x8054;age&#x5C5E;&#x6027;&#x7684;&#x4F9D;&#x8D56;&#x3002;
+bgg.age = 40;
+</code></pre><p><a href="https://segmentfault.com/a/1190000011153487#articleHeader1" target="_blank">vue&#x54CD;&#x5E94;&#x5F0F;&#x539F;&#x7406;&#x89E3;&#x6790;</a></p>
 
                                 
                                 </section>
@@ -3001,7 +3076,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"vue","level":"1.8","depth":1,"next":{"title":"canvas","level":"1.9","depth":1,"path":"section2/canvas/介绍canvas.md","ref":"section2/canvas/介绍canvas.md","articles":[{"title":"canvas基础知识","level":"1.9.1","depth":2,"path":"section2/canvas/canvas基础知识.md","ref":"section2/canvas/canvas基础知识.md","articles":[]},{"title":"路径","level":"1.9.2","depth":2,"path":"section2/canvas/路径.md","ref":"section2/canvas/路径.md","articles":[]},{"title":"填充和描边","level":"1.9.3","depth":2,"path":"section2/canvas/填充和描边.md","ref":"section2/canvas/填充和描边.md","articles":[]},{"title":"文本","level":"1.9.4","depth":2,"path":"section2/canvas/文本.md","ref":"section2/canvas/文本.md","articles":[]},{"title":"清除画布","level":"1.9.5","depth":2,"path":"section2/canvas/清除画布.md","ref":"section2/canvas/清除画布.md","articles":[]},{"title":"保存和恢复","level":"1.9.6","depth":2,"path":"section2/canvas/保存和恢复.md","ref":"section2/canvas/保存和恢复.md","articles":[]},{"title":"变换","level":"1.9.7","depth":2,"path":"section2/canvas/变换.md","ref":"section2/canvas/变换.md","articles":[]},{"title":"阴影","level":"1.9.8","depth":2,"path":"section2/canvas/阴影.md","ref":"section2/canvas/阴影.md","articles":[]},{"title":"合成","level":"1.9.9","depth":2,"path":"section2/canvas/合成.md","ref":"section2/canvas/合成.md","articles":[]},{"title":"渐变","level":"1.9.10","depth":2,"path":"section2/canvas/渐变.md","ref":"section2/canvas/渐变.md","articles":[]},{"title":"画布导出为图片","level":"1.9.11","depth":2,"path":"section2/canvas/画布导出为图像.md","ref":"section2/canvas/画布导出为图像.md","articles":[]},{"title":"将图片导入画布","level":"1.9.12","depth":2,"path":"section2/canvas/将图片导入画布.md","ref":"section2/canvas/将图片导入画布.md","articles":[]},{"title":"访问像素值","level":"1.9.13","depth":2,"path":"section2/canvas/访问像素值.md","ref":"section2/canvas/访问像素值.md","articles":[]},{"title":"模式","level":"1.9.14","depth":2,"path":"section2/canvas/模式.md","ref":"section2/canvas/模式.md","articles":[]},{"title":"动画函数","level":"1.9.15","depth":2,"path":"section2/canvas/动画.md","ref":"section2/canvas/动画.md","articles":[]}]},"previous":{"title":"适配器模式","level":"1.7.15","depth":2,"path":"section2/javascript设计模式/适配器模式.md","ref":"section2/javascript设计模式/适配器模式.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"3.x.x","theme":"default","variables":{},"plugins":["toggle-chapters","livereload"],"pluginsConfig":{"toggle-chapters":{},"livereload":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"section2/vue.md","mtime":"2018-08-14T08:31:06.765Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-14T16:55:41.306Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"vue","level":"1.8","depth":1,"next":{"title":"canvas","level":"1.9","depth":1,"path":"section2/canvas/介绍canvas.md","ref":"section2/canvas/介绍canvas.md","articles":[{"title":"canvas基础知识","level":"1.9.1","depth":2,"path":"section2/canvas/canvas基础知识.md","ref":"section2/canvas/canvas基础知识.md","articles":[]},{"title":"路径","level":"1.9.2","depth":2,"path":"section2/canvas/路径.md","ref":"section2/canvas/路径.md","articles":[]},{"title":"填充和描边","level":"1.9.3","depth":2,"path":"section2/canvas/填充和描边.md","ref":"section2/canvas/填充和描边.md","articles":[]},{"title":"文本","level":"1.9.4","depth":2,"path":"section2/canvas/文本.md","ref":"section2/canvas/文本.md","articles":[]},{"title":"清除画布","level":"1.9.5","depth":2,"path":"section2/canvas/清除画布.md","ref":"section2/canvas/清除画布.md","articles":[]},{"title":"保存和恢复","level":"1.9.6","depth":2,"path":"section2/canvas/保存和恢复.md","ref":"section2/canvas/保存和恢复.md","articles":[]},{"title":"变换","level":"1.9.7","depth":2,"path":"section2/canvas/变换.md","ref":"section2/canvas/变换.md","articles":[]},{"title":"阴影","level":"1.9.8","depth":2,"path":"section2/canvas/阴影.md","ref":"section2/canvas/阴影.md","articles":[]},{"title":"合成","level":"1.9.9","depth":2,"path":"section2/canvas/合成.md","ref":"section2/canvas/合成.md","articles":[]},{"title":"渐变","level":"1.9.10","depth":2,"path":"section2/canvas/渐变.md","ref":"section2/canvas/渐变.md","articles":[]},{"title":"画布导出为图片","level":"1.9.11","depth":2,"path":"section2/canvas/画布导出为图像.md","ref":"section2/canvas/画布导出为图像.md","articles":[]},{"title":"将图片导入画布","level":"1.9.12","depth":2,"path":"section2/canvas/将图片导入画布.md","ref":"section2/canvas/将图片导入画布.md","articles":[]},{"title":"访问像素值","level":"1.9.13","depth":2,"path":"section2/canvas/访问像素值.md","ref":"section2/canvas/访问像素值.md","articles":[]},{"title":"模式","level":"1.9.14","depth":2,"path":"section2/canvas/模式.md","ref":"section2/canvas/模式.md","articles":[]},{"title":"动画函数","level":"1.9.15","depth":2,"path":"section2/canvas/动画.md","ref":"section2/canvas/动画.md","articles":[]}]},"previous":{"title":"适配器模式","level":"1.7.15","depth":2,"path":"section2/javascript设计模式/适配器模式.md","ref":"section2/javascript设计模式/适配器模式.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"3.x.x","theme":"default","variables":{},"plugins":["toggle-chapters","livereload"],"pluginsConfig":{"toggle-chapters":{},"livereload":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"section2/vue.md","mtime":"2018-11-15T12:57:39.520Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-15T12:57:52.572Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
